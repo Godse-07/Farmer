@@ -211,23 +211,23 @@ class _ImageClassifierState extends State<BugDetect> {
           ),
         ),
       ),
-      bottomNavigationBar: CurvedNavigationBar(
-        items: items,
-        index: index,
-        height: 60,
-        onTap: (selectedIndex) {
-          setState(() {
-            index = selectedIndex;
-          });
-          if (selectedIndex == 0) {
-            // Navigate to BugDetect when the first tab (bug icon) is tapped
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => BugDetect()),
-            );
-          }
-        },
-      ),
+      // bottomNavigationBar: CurvedNavigationBar(
+      //   items: items,
+      //   index: index,
+      //   height: 60,
+      //   onTap: (selectedIndex) {
+      //     setState(() {
+      //       index = selectedIndex;
+      //     });
+      //     if (selectedIndex == 0) {
+      //       // Navigate to BugDetect when the first tab (bug icon) is tapped
+      //       Navigator.push(
+      //         context,
+      //         MaterialPageRoute(builder: (context) => BugDetect()),
+      //       );
+      //     }
+      //   },
+      // ),
     );
   }
 }

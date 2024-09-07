@@ -6,8 +6,8 @@ import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:sih/page/Bug_report.dart';
-import 'package:sih/page/api_key.dart'; // Import the permission_handler package
+import 'package:sih/page/Bug_report.dart'; // Import your BugDetect widget
+import 'package:sih/page/api_key.dart'; // Import the API key
 
 // Replace with your actual API key.
 const String apiKey = apiKeyval;
@@ -24,7 +24,7 @@ class _DemoPageState extends State<DemoPage> {
   bool _isLoading = false;
   String _errorMessage = '';
   Position? _position;
-  String _address = 'Your Location'; // Initialize with default text
+  String _address = 'Your Location';
 
   int index = 1;
 
@@ -32,6 +32,7 @@ class _DemoPageState extends State<DemoPage> {
     Icon(Icons.bug_report, size: 30),
     Icon(Icons.cloud, size: 30),
     Icon(Icons.shop, size: 30),
+    Icon(Icons.bar_chart, size: 30),
   ];
 
   @override
@@ -154,6 +155,7 @@ class _DemoPageState extends State<DemoPage> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
@@ -165,15 +167,7 @@ class _DemoPageState extends State<DemoPage> {
               colors: [Colors.blue[400]!, Colors.blue[900]!],
             ),
           ),
-          child: _isLoading
-              ? Center(child: CircularProgressIndicator(color: Colors.white))
-              : _errorMessage.isNotEmpty
-                  ? _buildErrorWidget()
-                  : _weatherData == null
-                      ? Center(
-                          child: Text('No data available',
-                              style: TextStyle(color: Colors.white)))
-                      : _buildWeatherWidget(),
+          child: _buildBodyContent(), // Update body content based on index
         ),
       ),
       bottomNavigationBar: CurvedNavigationBar(
@@ -184,14 +178,7 @@ class _DemoPageState extends State<DemoPage> {
           setState(() {
             index = selectedIndex;
           });
-          if (selectedIndex == 0) {
-            // Navigate to BugDetect when the first tab (bug icon) is tapped
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => BugDetect()),
-            );
-          }
-          },
+        },
       ),
     );
   }
@@ -244,7 +231,7 @@ class _DemoPageState extends State<DemoPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          _address, // Display the current location address
+          _address,
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,
@@ -356,6 +343,24 @@ class _DemoPageState extends State<DemoPage> {
         ),
       ],
     );
+  }
+
+  Widget _buildBodyContent() {
+    if (index == 0) {
+      return BugDetect(); // Show the BugDetect page
+    } else if (index == 1) {
+      return _weatherData == null
+          ? Center(
+              child: Text('No data available',
+                  style: TextStyle(color: Colors.white)),
+            )
+          : _buildWeatherWidget();
+    } else {
+      return Center(
+        child:
+            Text('Other content here', style: TextStyle(color: Colors.white)),
+      );
+    }
   }
 
   Widget _dailyForecast() {
