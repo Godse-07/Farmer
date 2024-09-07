@@ -1,4 +1,4 @@
-
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:sih/page/Bug_report.dart';
 import 'package:sih/page/api_key.dart'; // Import the permission_handler package
 
 // Replace with your actual API key.
@@ -24,6 +25,14 @@ class _DemoPageState extends State<DemoPage> {
   String _errorMessage = '';
   Position? _position;
   String _address = 'Your Location'; // Initialize with default text
+
+  int index = 1;
+
+  final items = <Widget>[
+    Icon(Icons.bug_report, size: 30),
+    Icon(Icons.cloud, size: 30),
+    Icon(Icons.shop, size: 30),
+  ];
 
   @override
   void initState() {
@@ -166,6 +175,23 @@ class _DemoPageState extends State<DemoPage> {
                               style: TextStyle(color: Colors.white)))
                       : _buildWeatherWidget(),
         ),
+      ),
+      bottomNavigationBar: CurvedNavigationBar(
+        items: items,
+        index: index,
+        height: 60,
+        onTap: (selectedIndex) {
+          setState(() {
+            index = selectedIndex;
+          });
+          if (selectedIndex == 0) {
+            // Navigate to BugDetect when the first tab (bug icon) is tapped
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => BugDetect()),
+            );
+          }
+          },
       ),
     );
   }
@@ -343,7 +369,7 @@ class _DemoPageState extends State<DemoPage> {
         ),
         SizedBox(height: 10),
         Column(
-          children: List.generate(2, (index) {
+          children: List.generate(7, (index) {
             final daily = _weatherData!['daily'][index];
             final weather = daily['weather'][0];
             final dateTime =
