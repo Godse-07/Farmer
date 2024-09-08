@@ -1,9 +1,8 @@
 import 'dart:io';
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:image_picker/image_picker.dart'; // Corrected import
+import 'package:image_picker/image_picker.dart';
 
 class BugDetect extends StatefulWidget {
   @override
@@ -12,9 +11,8 @@ class BugDetect extends StatefulWidget {
 
 class _ImageClassifierState extends State<BugDetect> {
   File? _image;
-  String? _response;
+  Map<String, dynamic>? _response;
   bool _loading = false;
-
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImage() async {
@@ -22,7 +20,7 @@ class _ImageClassifierState extends State<BugDetect> {
     if (pickedFile != null) {
       setState(() {
         _image = File(pickedFile.path);
-        _response = null; // Reset the response when a new image is picked.
+        _response = null; // Reset the response when a new image is picked
       });
     } else {
       print('No image selected.');
@@ -49,18 +47,16 @@ class _ImageClassifierState extends State<BugDetect> {
       if (response.statusCode == 200) {
         var jsonResponse = json.decode(response.body);
         setState(() {
-          _response = jsonResponse['confidence'] * 100 >= 90
-              ? 'Disease: ${jsonResponse['class']}\nConfidence: ${(jsonResponse['confidence'] * 100).toStringAsFixed(2)}%'
-              : 'Unable to predict, Try again';
+          _response = jsonResponse;
         });
       } else {
         setState(() {
-          _response = 'Error classifying image';
+          _response = {"error": "Error classifying image"};
         });
       }
     } catch (error) {
       setState(() {
-        _response = 'Error: $error';
+        _response = {"error": "Error: $error"};
       });
     } finally {
       setState(() {
@@ -76,29 +72,14 @@ class _ImageClassifierState extends State<BugDetect> {
     });
   }
 
-  final items = <Widget>[
-    Icon(Icons.bug_report, size: 30),
-    Icon(Icons.cloud, size: 30),
-    Icon(Icons.shop, size: 30),
-  ];
-
-  int index = 0;
-
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      // Replace the background color with a gradient in the body instead
       appBar: AppBar(
-        title: Text(
-          'Image Classifier',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        shadowColor: Colors.white.withOpacity(0.5),
+        title: Text('Image Classifier'),
+        centerTitle: true,
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -108,9 +89,9 @@ class _ImageClassifierState extends State<BugDetect> {
             colors: [Colors.blue[400]!, Colors.blue[900]!],
           ),
         ),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -118,22 +99,24 @@ class _ImageClassifierState extends State<BugDetect> {
                   GestureDetector(
                     onTap: _pickImage,
                     child: Container(
-                      width: screenWidth > 600 ? 400 : 300,
-                      height: screenWidth > 600 ? 200 : 150,
+                      width: screenWidth > 600 ? 500 : double.infinity,
+                      height: screenWidth > 600 ? 250 : 200,
                       decoration: BoxDecoration(
+                        border: Border.all(color: Colors.white, width: 3),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.white, width: 2),
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.cloud_upload,
-                              size: 60, color: Colors.black),
+                              size: 50, color: Colors.white),
                           SizedBox(height: 10),
                           Text(
                             'Click to upload or drag and drop an image',
-                            style:
-                                TextStyle(color: Colors.black, fontSize: 14.2),
+                            style: TextStyle(
+                              fontSize: screenWidth > 600 ? 20 : 16,
+                              color: Colors.white,
+                            ),
                           ),
                         ],
                       ),
@@ -144,8 +127,8 @@ class _ImageClassifierState extends State<BugDetect> {
                     children: [
                       Image.file(
                         _image!,
-                        width: screenWidth > 600 ? 250 : 200,
-                        height: screenWidth > 600 ? 250 : 200,
+                        width: screenWidth > 600 ? 400 : 300,
+                        height: screenWidth > 600 ? 400 : 300,
                         fit: BoxFit.cover,
                       ),
                       Positioned(
@@ -161,48 +144,70 @@ class _ImageClassifierState extends State<BugDetect> {
                   ),
                 SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: (_image == null || _loading)
-                      ? null
-                      : _classifyImage, // Disable the button when no image is selected or loading
+                  onPressed:
+                      (_image == null || _loading) ? null : _classifyImage,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Colors.white, // Button background color always white
+                    backgroundColor: _loading ? Colors.grey : Colors.blue,
                     padding: EdgeInsets.symmetric(
-                      horizontal: screenWidth > 600 ? 20 : 15,
-                      vertical: screenWidth > 600 ? 15 : 10,
-                    ),
+                        horizontal: screenWidth > 600 ? 40 : 20,
+                        vertical: screenWidth > 600 ? 20 : 10),
                   ),
                   child: Text(
                     _loading ? 'Classifying...' : 'Classify Image',
                     style: TextStyle(
                       fontSize: screenWidth > 600 ? 18 : 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black, // Text color is black for contrast
-                      letterSpacing:
-                          1.1, // Letter spacing for better readability
+                      color: Colors.white,
                     ),
                   ),
                 ),
                 SizedBox(height: 20),
                 if (_response != null)
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    width: double.infinity,
+                    padding: EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           'Response:',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
-                            color: Colors.black,
                           ),
                         ),
                         SizedBox(height: 10),
-                        Text(
-                          _response!,
-                          style: TextStyle(color: Colors.black),
-                          textAlign: TextAlign.center,
-                        ),
+                        if (_response!['error'] != null)
+                          Text(_response!['error']),
+                        if (_response!['confidence'] != null &&
+                            _response!['confidence'] * 100 >= 90) ...[
+                          Text(
+                            'Disease: ${_response!['disease']}',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          Text(
+                            'Confidence: ${(_response!['confidence'] * 100).toStringAsFixed(2)}%',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          if (_response!['precautions'] != null)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(height: 10),
+                                Text('Precautions:'),
+                                for (var precaution
+                                    in _response!['precautions'])
+                                  Text('• $precaution'),
+                              ],
+                            ),
+                        ],
+                        if (_response!['confidence'] != null &&
+                            _response!['confidence'] * 100 < 90)
+                          Text('Unable to predict, Try again'),
                       ],
                     ),
                   ),
@@ -211,23 +216,6 @@ class _ImageClassifierState extends State<BugDetect> {
           ),
         ),
       ),
-      // bottomNavigationBar: CurvedNavigationBar(
-      //   items: items,
-      //   index: index,
-      //   height: 60,
-      //   onTap: (selectedIndex) {
-      //     setState(() {
-      //       index = selectedIndex;
-      //     });
-      //     if (selectedIndex == 0) {
-      //       // Navigate to BugDetect when the first tab (bug icon) is tapped
-      //       Navigator.push(
-      //         context,
-      //         MaterialPageRoute(builder: (context) => BugDetect()),
-      //       );
-      //     }
-      //   },
-      // ),
     );
   }
 }
