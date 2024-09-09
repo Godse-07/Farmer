@@ -158,6 +158,7 @@ class _ImageClassifierState extends State<BugDetect> {
                       fontSize: screenWidth > 600 ? 18 : 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
+                      letterSpacing: 1.2,
                     ),
                   ),
                 ),
