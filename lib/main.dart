@@ -1,3 +1,4 @@
+import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sih/Onboarding/Onboarding_view.dart';
@@ -26,14 +27,20 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      // Conditional navigation based on the onboarding value
-      home: onboarding ? const DemoPage() : const OnboardingView(),
-    );
+        debugShowCheckedModeBanner: false,
+        title: 'Flutter Demo',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        // Conditional navigation based on the onboarding value
+        home: AnimatedSplashScreen(
+          splash: 'assets/splash.gif',
+          splashIconSize: 400,
+          splashTransition: SplashTransition.fadeTransition,
+          centered: true,
+          duration: 3100,
+          nextScreen: onboarding ? const DemoPage() : const OnboardingView(),
+        ));
   }
 }
