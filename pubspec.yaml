@@ -51,6 +51,7 @@ dependencies:
   timelines: ^0.1.0
   easy_stepper: ^0.7.3
   rename_app: ^1.6.1
+  fl_chart: ^0.69.0
 
 
 dev_dependencies:

@@ -9,6 +9,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:sih/Onboarding/Onboadring_items.dart';
 import 'package:sih/page/Bug_report.dart'; // Import your BugDetect widget
 import 'package:sih/page/api_key.dart';
+import 'package:sih/page/price_prediction.dart';
 import 'package:sih/pages/onboarding_page.dart'; // Import the API key
 
 // Replace with your actual API key.
@@ -358,16 +359,13 @@ class _DemoPageState extends State<DemoPage> {
             )
           : _buildWeatherWidget();
     } else if (index == 3) {
-      return Center(
-        child:
-            Text('Other content here', style: TextStyle(color: Colors.white)),
-      );
+      return pricePrediction();
     } else if (index == 2) {
       return OnboardingPage();
     }
     return Center(
-    child: Text('Invalid index', style: TextStyle(color: Colors.white)),
-  );
+      child: Text('Invalid index', style: TextStyle(color: Colors.white)),
+    );
   }
 
   Widget _dailyForecast() {
