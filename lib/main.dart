@@ -35,7 +35,14 @@ class MyApp extends StatelessWidget {
         ),
         // Conditional navigation based on the onboarding value
         home: AnimatedSplashScreen(
-          splash: 'assets/splash.gif',
+          splash: ClipOval(
+            child: Image.asset(
+              'assets/splash.gif',
+              width: 400,
+              height: 400,
+              fit: BoxFit.cover,
+            ),
+          ),
           splashIconSize: 400,
           splashTransition: SplashTransition.fadeTransition,
           centered: true,
