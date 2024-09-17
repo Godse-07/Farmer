@@ -44,3 +44,5 @@ app.*.map.json
 
 
 /lib/page/mandi_api_key.dart
+
+/lib/page/api_key.dart
