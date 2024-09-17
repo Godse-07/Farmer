@@ -1,1 +1,0 @@
-const mandi_key = "579b464db66ec23bdd00000122bfe885f2e74023770d4544cf362d6d";
