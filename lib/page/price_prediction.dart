@@ -6,12 +6,12 @@ import 'package:intl/intl.dart'; // Import intl package for date formatting
 import 'package:sih/page/api_key.dart'; // Assuming you store your API key here
 import 'package:fl_chart/fl_chart.dart';
 
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:sih/page/mandi_api_key.dart';
+
 class pricePrediction extends StatefulWidget {
   @override
   _PricePredictionState createState() => _PricePredictionState();
-
-  
-
 }
 
 class _PricePredictionState extends State<pricePrediction> {
@@ -22,10 +22,34 @@ class _PricePredictionState extends State<pricePrediction> {
 
   final String apiKey = apiKeyval;
 
+  List<String> stateList = [];
+  List<String> districtList = [];
+  List<String> marketList = [];
+  List<String> commodityList = [];
+  List<String> varietyList = [];
+
+  double? currentPrice;
+
   @override
   void initState() {
     super.initState();
     fetchWeatherAndPredictPrice();
+  }
+
+  String _getCurrentDatePrice() {
+    if (dateList.isEmpty || priceList.isEmpty) return "No data available";
+
+    // Get today's date in 'yyyy-MM-dd' format
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    // Check if today is in dateList
+    final index = dateList.indexOf(today);
+
+    if (index != -1) {
+      return "₹ ${priceList[index].toStringAsFixed(2)}";
+    } else {
+      return "No price available for today.";
+    }
   }
 
   Future<void> fetchWeatherAndPredictPrice() async {
@@ -139,6 +163,7 @@ class _PricePredictionState extends State<pricePrediction> {
       ),
       body: Container(
         width: double.infinity,
+        height: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -146,143 +171,194 @@ class _PricePredictionState extends State<pricePrediction> {
             colors: [Colors.blue[400]!, Colors.blue[900]!],
           ),
         ),
-        child: Column(
-          children: [
-            Container(
-              margin: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                // margin: const EdgeInsets.all(20),
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height -
+                  AppBar().preferredSize.height -
+                  MediaQuery.of(context).padding.top,
+            ),
+            child: IntrinsicHeight(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Container(
+                          margin: EdgeInsets.all(10),
+                          child: Text(
+                            "Price Prediction",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          margin: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: isLoading
+                              ? const CircularProgressIndicator()
+                              : _buildPriceChart(),
+                        ),
+                        SizedBox(height: 40),
+                        Container(
+                          margin: EdgeInsets.all(10),
+                          child: Text(
+                            "current price",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          margin: EdgeInsets.all(10),
+                          child: Text(
+                            _getCurrentDatePrice(),
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              child: isLoading
-                  ? const CircularProgressIndicator()
-                  : _buildPriceChart(),
-            )
-          ],
+            ),
+          ),
         ),
       ),
     );
   }
 
+  Widget _buildPriceChart() {
+    if (priceList.isEmpty) {
+      return const Text("No data available to display.");
+    }
 
-  
+    // Find the minimum and maximum prices
+    double minPrice = priceList.reduce((a, b) => a < b ? a : b);
+    double maxPrice = priceList.reduce((a, b) => a > b ? a : b);
 
- Widget _buildPriceChart() {
-  if (priceList.isEmpty) {
-    return const Text("No data available to display.");
-  }
+    // Adjust the minimum Y to be 30 or the lowest price, whichever is lower
+    double minY = minPrice < 30 ? minPrice.floorToDouble() : 30;
+    // Round up the maximum Y to the nearest 10
+    double maxY = (maxPrice / 10).ceil() * 10.0;
 
-  // Find the minimum and maximum prices
-  double minPrice = priceList.reduce((a, b) => a < b ? a : b);
-  double maxPrice = priceList.reduce((a, b) => a > b ? a : b);
-
-  // Adjust the minimum Y to be 30 or the lowest price, whichever is lower
-  double minY = minPrice < 30 ? minPrice.floorToDouble() : 30;
-  // Round up the maximum Y to the nearest 10
-  double maxY = (maxPrice / 10).ceil() * 10.0;
-
-  final lineBarsData = [
-    LineChartBarData(
-      showingIndicators: showingTooltipOnSpots
-          .where((index) => index < priceList.length)
-          .toList(),
-      spots: List.generate(
-        priceList.length,
-        (index) => FlSpot(index.toDouble(), priceList[index]),
-      ),
-      isCurved: true,
-      barWidth: 4,
-      belowBarData: BarAreaData(
-        show: true,
+    final lineBarsData = [
+      LineChartBarData(
+        showingIndicators: showingTooltipOnSpots
+            .where((index) => index < priceList.length)
+            .toList(),
+        spots: List.generate(
+          priceList.length,
+          (index) => FlSpot(index.toDouble(), priceList[index]),
+        ),
+        isCurved: true,
+        barWidth: 4,
+        belowBarData: BarAreaData(
+          show: true,
+          gradient: LinearGradient(
+            colors: [
+              Colors.blue.withOpacity(0.4),
+              Colors.green.withOpacity(0.4),
+              Colors.purple.withOpacity(0.4),
+            ],
+          ),
+        ),
+        dotData: FlDotData(
+          show: true,
+          getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+            radius: 8,
+            color: Colors.blue,
+            strokeWidth: 2,
+            strokeColor: Colors.white,
+          ),
+        ),
         gradient: LinearGradient(
           colors: [
-            Colors.blue.withOpacity(0.4),
-            Colors.green.withOpacity(0.4),
-            Colors.purple.withOpacity(0.4),
+            Colors.blue,
+            Colors.green,
+            Colors.purple,
           ],
+          stops: const [0.1, 0.4, 0.9],
         ),
       ),
-      dotData: FlDotData(
-        show: true,
-        getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
-          radius: 8,
-          color: Colors.blue,
-          strokeWidth: 2,
-          strokeColor: Colors.white,
-        ),
-      ),
-      gradient: LinearGradient(
-        colors: [
-          Colors.blue,
-          Colors.green,
-          Colors.purple,
-        ],
-        stops: const [0.1, 0.4, 0.9],
-      ),
-    ),
-  ];
+    ];
 
-  final tooltipsOnBar = lineBarsData[0];
+    final tooltipsOnBar = lineBarsData[0];
 
-  return SizedBox(
-    height: 300,
-    child: Container(
-      margin: const EdgeInsets.all(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 20),
-        child: LineChart(
-          LineChartData(
-            showingTooltipIndicators: showingTooltipOnSpots.map((index) {
-              return ShowingTooltipIndicators([
-                LineBarSpot(
-                  tooltipsOnBar,
-                  lineBarsData.indexOf(tooltipsOnBar),
-                  tooltipsOnBar.spots[index],
-                ),
-              ]);
-            }).toList(),
-            lineTouchData: LineTouchData(
-              enabled: true,
-              handleBuiltInTouches: false,
-              touchCallback: (FlTouchEvent event, LineTouchResponse? response) {
-                if (response == null || response.lineBarSpots == null) {
-                  return;
-                }
-                if (event is FlTapUpEvent) {
-                  final spotIndex = response.lineBarSpots!.first.spotIndex;
-                  setState(() {
-                    if (showingTooltipOnSpots.contains(spotIndex)) {
-                      showingTooltipOnSpots.remove(spotIndex);
-                    } else {
-                      showingTooltipOnSpots.add(spotIndex);
-                    }
-                  });
-                }
-              },
-              mouseCursorResolver: (FlTouchEvent event, LineTouchResponse? response) {
-                if (response == null || response.lineBarSpots == null) {
-                  return SystemMouseCursors.basic;
-                }
-                return SystemMouseCursors.click;
-              },
-              getTouchedSpotIndicator: (LineChartBarData barData, List<int> spotIndexes) {
-                return spotIndexes.map((index) {
-                  return TouchedSpotIndicatorData(
-                    const FlLine(color: Colors.pink),
-                    FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
-                        radius: 8,
-                        color: Colors.blue,
-                        strokeWidth: 2,
-                        strokeColor: Colors.white,
+    return SizedBox(
+      height: 300,
+      child: Container(
+        margin: const EdgeInsets.all(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 20),
+          child: LineChart(
+            LineChartData(
+              showingTooltipIndicators: showingTooltipOnSpots.map((index) {
+                return ShowingTooltipIndicators([
+                  LineBarSpot(
+                    tooltipsOnBar,
+                    lineBarsData.indexOf(tooltipsOnBar),
+                    tooltipsOnBar.spots[index],
+                  ),
+                ]);
+              }).toList(),
+              lineTouchData: LineTouchData(
+                enabled: true,
+                handleBuiltInTouches: false,
+                touchCallback:
+                    (FlTouchEvent event, LineTouchResponse? response) {
+                  if (response == null || response.lineBarSpots == null) {
+                    return;
+                  }
+                  if (event is FlTapUpEvent) {
+                    final spotIndex = response.lineBarSpots!.first.spotIndex;
+                    setState(() {
+                      if (showingTooltipOnSpots.contains(spotIndex)) {
+                        showingTooltipOnSpots.remove(spotIndex);
+                      } else {
+                        showingTooltipOnSpots.add(spotIndex);
+                      }
+                    });
+                  }
+                },
+                mouseCursorResolver:
+                    (FlTouchEvent event, LineTouchResponse? response) {
+                  if (response == null || response.lineBarSpots == null) {
+                    return SystemMouseCursors.basic;
+                  }
+                  return SystemMouseCursors.click;
+                },
+                getTouchedSpotIndicator:
+                    (LineChartBarData barData, List<int> spotIndexes) {
+                  return spotIndexes.map((index) {
+                    return TouchedSpotIndicatorData(
+                      const FlLine(color: Colors.pink),
+                      FlDotData(
+                        show: true,
+                        getDotPainter: (spot, percent, barData, index) =>
+                            FlDotCirclePainter(
+                          radius: 8,
+                          color: Colors.blue,
+                          strokeWidth: 2,
+                          strokeColor: Colors.white,
+                        ),
                       ),
-                    ),
-                  );
-                }).toList();
-              },
-              touchTooltipData: LineTouchTooltipData(
+                    );
+                  }).toList();
+                },
+                touchTooltipData: LineTouchTooltipData(
                   getTooltipColor: (touchedSpot) => Colors.pink,
                   tooltipRoundedRadius: 8,
                   getTooltipItems: (List<LineBarSpot> lineBarsSpot) {
@@ -298,71 +374,71 @@ class _PricePredictionState extends State<pricePrediction> {
                   },
                 ),
               ),
-            lineBarsData: lineBarsData,
-            minY: minY,
-            maxY: maxY,
-            titlesData: FlTitlesData(
-              bottomTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  interval: 1,
-                  getTitlesWidget: (value, meta) {
-                    final date = DateFormat('yyyy-MM-dd').parse(dateList[value.toInt()]);
-                    return Text(
-                      date.day.toString(),
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    );
-                  },
-                  reservedSize: 22,
+              lineBarsData: lineBarsData,
+              minY: minY,
+              maxY: maxY,
+              titlesData: FlTitlesData(
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    interval: 1,
+                    getTitlesWidget: (value, meta) {
+                      final date = DateFormat('yyyy-MM-dd')
+                          .parse(dateList[value.toInt()]);
+                      return Text(
+                        date.day.toString(),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      );
+                    },
+                    reservedSize: 22,
+                  ),
+                ),
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    interval: 10,
+                    getTitlesWidget: (value, meta) {
+                      return Text(
+                        value.toInt().toString(),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      );
+                    },
+                    reservedSize: 30,
+                  ),
+                ),
+                topTitles: AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                rightTitles: AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
                 ),
               ),
-              leftTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  interval: 10,
-                  getTitlesWidget: (value, meta) {
-                    return Text(
-                      value.toInt().toString(),
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    );
-                  },
-                  reservedSize: 30,
+              gridData: FlGridData(
+                show: true,
+                drawVerticalLine: true,
+                getDrawingHorizontalLine: (value) => FlLine(
+                  color: Colors.grey.withOpacity(0.3),
+                  strokeWidth: 1,
+                ),
+                getDrawingVerticalLine: (value) => FlLine(
+                  color: Colors.grey.withOpacity(0.3),
+                  strokeWidth: 1,
                 ),
               ),
-              topTitles: AxisTitles(
-                sideTitles: SideTitles(showTitles: false),
+              borderData: FlBorderData(
+                show: true,
+                border: Border.all(color: Colors.grey.withOpacity(0.5)),
               ),
-              rightTitles: AxisTitles(
-                sideTitles: SideTitles(showTitles: false),
-              ),
-            ),
-            gridData: FlGridData(
-              show: true,
-              drawVerticalLine: true,
-              getDrawingHorizontalLine: (value) => FlLine(
-                color: Colors.grey.withOpacity(0.3),
-                strokeWidth: 1,
-              ),
-              getDrawingVerticalLine: (value) => FlLine(
-                color: Colors.grey.withOpacity(0.3),
-                strokeWidth: 1,
-              ),
-            ),
-            borderData: FlBorderData(
-              show: true,
-              border: Border.all(color: Colors.grey.withOpacity(0.5)),
             ),
           ),
         ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 }
